@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCAN LIBRI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf8;
+    --ink: #1a1208;
+    --ink-light: #6b5f4a;
+    --accent: #c84b2f;
+    --accent-soft: #f0e0da;
+    --border: #d9cfc0;
+    --success: #2d6a4f;
+    --success-soft: #d8f3dc;
+    --gold: #b5873a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+  header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* AUTH */
+  #auth-section { padding: 32px 24px; }
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .auth-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .auth-card p {
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  /* CATEGORY BAR */
+  #category-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #category-bar::-webkit-scrollbar { display: none; }
+  .cat-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 12px 10px;
+    border: none;
+    background: transparent;
+    color: var(--ink-light);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .cat-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* TAB SELECTOR */
+  #tab-selector-area {
+    padding: 10px 24px 0;
+    display: none;
+  }
+  #tab-selector-area label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    display: block;
+    margin-bottom: 4px;
+  }
+  #tab-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--surface);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  /* SCANNER */
+  #scanner-area { padding: 16px 24px 0; }
+  .scanner-box {
+    background: var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 4/3;
+    max-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #interactive { width: 100%; height: 100%; }
+  #interactive video, #interactive canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+  }
+  .scanner-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .scan-frame {
+    width: 60%;
+    height: 40%;
+    border: 2px solid var(--accent);
+    border-radius: 2px;
+    position: relative;
+  }
+  .scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: var(--accent);
+    animation: scan 2s ease-in-out infinite;
+  }
+  @keyframes scan { 0%,100% { top: 0; } 50% { top: calc(100% - 2px); } }
+
+  .scanner-placeholder {
+    color: var(--border);
+    text-align: center;
+    padding: 30px 20px;
+    flex-direction: column;
+    display: flex;
+    align-items: center;
+  }
+  .scanner-placeholder .icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .scanner-placeholder p { font-size: 0.75rem; font-family: 'DM Mono', monospace; }
+
+  .scan-controls { display: flex; gap: 10px; margin-top: 10px; }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #a83a20; }
+  .btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg); }
+
+  .isbn-manual { display: flex; gap: 8px; margin-top: 10px; }
+  .isbn-manual input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--surface);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+    outline: none;
+  }
+  .isbn-manual input:focus { border-color: var(--accent); }
+
+  /* BOOK FORM */
+  #book-form-area { padding: 12px 24px 0; }
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+  }
+  .form-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  .field { margin-bottom: 10px; }
+  .field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 3px;
+  }
+  .field input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--ink);
+    outline: none;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .tag-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag-opt {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-light);
+  }
+  .tag-opt.selected { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  /* STATUS */
+  #status-bar {
+    margin: 10px 24px 0;
+    padding: 9px 14px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.73rem;
+    display: none;
+    line-height: 1.4;
+  }
+  #status-bar.success { background: var(--success-soft); color: var(--success); border: 1px solid #b7e4c7; display: block; }
+  #status-bar.error { background: var(--accent-soft); color: var(--accent); border: 1px solid #e8b4a8; display: block; }
+  #status-bar.loading { background: #fff8e7; color: var(--gold); border: 1px solid #f0d9a0; display: block; }
+
+  /* SETTINGS */
+  #settings-panel { display: none; padding: 20px 24px; }
+  .settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .settings-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  .settings-card p {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  /* NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 11px 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--ink-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn span { font-size: 1.1rem; }
+
+  #main-content { padding-bottom: 68px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Scan Libri</h1>
+  <span>ISBN → Sheets</span>
+</header>
+
+<div id="main-content">
+
+  <!-- AUTH -->
+  <div id="auth-section">
+    <div class="auth-card">
+      <h2>Accedi con Google</h2>
+      <p>Autorizza l'accesso ai tuoi Google Sheet per iniziare a catalogare i libri.</p>
+      <button class="btn btn-primary" onclick="signIn()">🔑 Accedi con Google</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-section" style="display:none">
+    <div id="category-bar"></div>
+
+    <div id="tab-selector-area">
+      <label>Sezione</label>
+      <select id="tab-select"></select>
+    </div>
+
+    <div id="status-bar"></div>
+
+    <!-- SCANNER VIEW -->
+    <div id="scanner-view">
+      <div id="scanner-area">
+        <div class="scanner-box">
+          <div class="scanner-placeholder" id="scanner-placeholder">
+            <div class="icon">📷</div>
+            <p>Premi "Avvia" per scansionare</p>
+          </div>
+          <div id="interactive"></div>
+          <div class="scanner-overlay" id="scan-overlay" style="display:none">
+            <div class="scan-frame"><div class="scan-line"></div></div>
+          </div>
+        </div>
+
+        <div class="scan-controls">
+          <button class="btn btn-primary" id="scan-btn" onclick="toggleScanner()">▶ Avvia</button>
+          <button class="btn btn-secondary" onclick="toggleManual()">ISBN manuale</button>
+        </div>
+
+        <div class="isbn-manual" id="manual-area" style="display:none">
+          <input type="text" id="manual-isbn" placeholder="Inserisci ISBN..." maxlength="17"
+            onkeydown="if(event.key==='Enter') lookupISBN(this.value.replace(/[-\s]/g,''))">
+          <button class="btn btn-primary" onclick="lookupISBN(document.getElementById('manual-isbn').value.replace(/[-\s]/g,''))">Cerca</button>
+        </div>
+      </div>
+
+      <!-- BOOK FORM -->
+      <div id="book-form-area" style="display:none">
+        <div class="form-card">
+          <h3>📖 Dati libro</h3>
+
+          <div class="field">
+            <label>Titolo</label>
+            <input type="text" id="f-titolo" placeholder="Titolo del libro">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Nome</label>
+              <input type="text" id="f-nome" placeholder="Nome autore">
+            </div>
+            <div class="field">
+              <label>Cognome</label>
+              <input type="text" id="f-cognome" placeholder="Cognome autore">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Editore</label>
+            <input type="text" id="f-editore" placeholder="Editore">
+          </div>
+
+          <div class="field">
+            <label>Lettore</label>
+            <div class="tag-selector" id="tag-selector"></div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn btn-primary" onclick="saveBook()" style="flex:2">💾 Salva</button>
+            <button class="btn btn-secondary" onclick="resetForm()" style="flex:1">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings-panel">
+      <div class="settings-card">
+        <h3>Lettori</h3>
+        <p>Iniziali dei lettori, separate da virgola</p>
+        <input type="text" id="tags-input" placeholder="N, F, A, B"
+          style="width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:2px; background:var(--bg); font-family:'DM Mono',monospace; font-size:0.85rem; outline:none; color:var(--ink);">
+        <button class="btn btn-primary" onclick="saveTags()" style="margin-top:10px; width:100%">✓ Salva</button>
+      </div>
+
+      <div class="settings-card">
+        <h3>Categorie</h3>
+        <p>Tutti i file Google Sheet sono preconfigurati. Le sezioni (tab) vengono lette automaticamente.</p>
+        <div id="cat-list"></div>
+      </div>
+
+      <button class="btn btn-secondary" onclick="signOut()" style="width:100%; margin-top:4px;">Esci dall'account</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-btn active" id="nav-scan" onclick="showView('scan')">
+    <span>📷</span>Scansiona
+  </button>
+  <button class="nav-btn" id="nav-settings" onclick="showView('settings')">
+    <span>⚙️</span>Impostazioni
+  </button>
+</nav>
+
+<script>
+// ─── CATEGORIE PRECONFIGURATE ──────────────────────────
+// Per ogni categoria: sheetId e le tab da ESCLUDERE (es. fogli di supporto)
+const CATEGORIES = [
+  { name: '01 Narrativa',        sheetId: '19SXHAYn7ETE1uGVuJXH14SiiJ7QMx1MOmej2F5_0ExE', exclude: ['Editori'] },
+  { name: '02 Saggi',            sheetId: '1GsqPrCb-lyGEP-GKEi4lrcDLj7KdNjQTs0ADOaNBJU8', exclude: ['Editori'] },
+  { name: 'Architettura/Design', sheetId: '1titzEKFrx6XE35i12XrPWiIISZla30QaH0a4NwOnuS4', exclude: ['Editori'] },
+  { name: 'Arte',                sheetId: '1xAr_9-_Vuq4rS2K4K6xO7V2D34eqBLDUrRRadyDr5Ow', exclude: ['Editori'] },
+  { name: 'Cinema/Fotografia',   sheetId: '1cjVHErs-lXLqMXOrfOu3PIAXeA8CUbWM4YvxawF9XkU', exclude: ['Editori'] },
+  { name: 'Escursionistica',     sheetId: '1Rh6QC5Y4_fX9pV53wzcT3Vc8c2WPBJG-c4cF34LijyM', exclude: ['Editori'] },
+  { name: 'Friuli',              sheetId: '1fyhewJRc6BX2MZSVIAG4MjE1-D0dia2oqJDdraozcDc', exclude: ['Editori'] },
+  { name: 'Illustrazione',       sheetId: '1ViQgJaZo5Hl9wyPUKRXNJ8W2KDZ4ljlZdJlsB66dFPQ', exclude: ['Editori'] },
+  { name: 'Saggi Naturalistici', sheetId: '15Kt0lndSmmxum33_zY-OZnMfBh3cOTesAIKHqByy-v0', exclude: ['Editori'] },
+];
+
+const CLIENT_ID = '601610748136-ng08e20fs8re2qavfgknbdupvl0q8ni1.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
+let accessToken = null;
+let activeCat = 0;
+let tabsCache = {};
+let currentTag = '';
+let tags = ['N', 'F'];
+let scannerRunning = false;
+
+// ─── AUTH ──────────────────────────────────────────────
+function signIn() {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: window.location.href.split('?')[0].split('#')[0],
+    response_type: 'token',
+    scope: SCOPES,
+    prompt: 'consent'
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/auth?' + params.toString();
+}
+
+function signOut() {
+  accessToken = null;
+  localStorage.removeItem('scanLibri_token');
+  document.getElementById('auth-section').style.display = 'block';
+  document.getElementById('app-section').style.display = 'none';
+  document.getElementById('bottom-nav').style.display = 'none';
+}
+
+function checkAuth() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  if (params.get('access_token')) {
+    accessToken = params.get('access_token');
+    localStorage.setItem('scanLibri_token', accessToken);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    accessToken = localStorage.getItem('scanLibri_token');
+  }
+  if (accessToken) showApp();
+}
+
+async function showApp() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('bottom-nav').style.display = 'flex';
+  loadTags();
+  renderTagSelector();
+  renderCategoryBar();
+  renderSettingsCatList();
+  await loadTabsForCat(activeCat);
+}
+
+// ─── TABS ──────────────────────────────────────────────
+async function loadTabsForCat(i) {
+  const cat = CATEGORIES[i];
+  const tabArea = document.getElementById('tab-selector-area');
+  const tabSel = document.getElementById('tab-select');
+
+  if (tabsCache[cat.sheetId]) {
+    renderTabSelect(tabsCache[cat.sheetId], cat.exclude || []);
+    return;
+  }
+
+  tabArea.style.display = 'block';
+  tabSel.innerHTML = '<option>⏳ Caricamento...</option>';
+
+  try {
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}?fields=sheets.properties.title`,
+      { headers: { 'Authorization': 'Bearer ' + accessToken } }
+    );
+    if (res.status === 401) { signOut(); return; }
+    const data = await res.json();
+    const tabs = data.sheets.map(s => s.properties.title);
+    tabsCache[cat.sheetId] = tabs;
+    renderTabSelect(tabs, cat.exclude || []);
+  } catch(e) {
+    tabSel.innerHTML = '<option>Errore caricamento</option>';
+  }
+}
+
+function renderTabSelect(tabs, exclude) {
+  const filtered = tabs.filter(t => !exclude.includes(t));
+  const tabSel = document.getElementById('tab-select');
+  const tabArea = document.getElementById('tab-selector-area');
+  tabSel.innerHTML = filtered.map(t => `<option value="${t}">${t}</option>`).join('');
+  // Show selector only if there are multiple content tabs
+  tabArea.style.display = filtered.length > 1 ? 'block' : 'none';
+}
+
+function getSelectedTab() {
+  const cat = CATEGORIES[activeCat];
+  const tabs = tabsCache[cat.sheetId];
+  if (!tabs) return 'Foglio1';
+  const filtered = tabs.filter(t => !(cat.exclude || []).includes(t));
+  if (filtered.length <= 1) return filtered[0] || tabs[0];
+  return document.getElementById('tab-select').value;
+}
+
+// ─── CATEGORY BAR ──────────────────────────────────────
+function renderCategoryBar() {
+  document.getElementById('category-bar').innerHTML = CATEGORIES.map((c, i) =>
+    `<button class="cat-btn ${i === activeCat ? 'active' : ''}" onclick="selectCat(${i})">${c.name}</button>`
+  ).join('');
+}
+
+async function selectCat(i) {
+  activeCat = i;
+  renderCategoryBar();
+  resetForm();
+  await loadTabsForCat(i);
+}
+
+// ─── VIEWS ─────────────────────────────────────────────
+function showView(view) {
+  document.getElementById('scanner-view').style.display = view === 'scan' ? 'block' : 'none';
+  document.getElementById('settings-panel').style.display = view === 'settings' ? 'block' : 'none';
+  document.getElementById('nav-scan').classList.toggle('active', view === 'scan');
+  document.getElementById('nav-settings').classList.toggle('active', view === 'settings');
+  if (view !== 'scan' && scannerRunning) stopScanner();
+  if (view === 'scan') {
+    const cat = CATEGORIES[activeCat];
+    const tabs = tabsCache[cat.sheetId];
+    const filtered = tabs ? tabs.filter(t => !(cat.exclude || []).includes(t)) : [];
+    document.getElementById('tab-selector-area').style.display = filtered.length > 1 ? 'block' : 'none';
+  } else {
+    document.getElementById('tab-selector-area').style.display = 'none';
+  }
+}
+
+// ─── SCANNER ───────────────────────────────────────────
+function toggleScanner() {
+  if (scannerRunning) stopScanner(); else startScanner();
+}
+
+function startScanner() {
+  document.getElementById('scanner-placeholder').style.display = 'none';
+  document.getElementById('scan-overlay').style.display = 'flex';
+  document.getElementById('scan-btn').textContent = '⏹ Ferma';
+  scannerRunning = true;
+
+  Quagga.init({
+    inputStream: {
+      name: 'Live', type: 'LiveStream',
+      target: document.getElementById('interactive'),
+      constraints: { facingMode: 'environment', width: 640, height: 480 }
+    },
+    decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader'] },
+    locate: true
+  }, err => {
+    if (err) { showStatus('Errore fotocamera: ' + err, 'error'); stopScanner(); return; }
+    Quagga.start();
+  });
+
+  Quagga.onDetected(result => {
+    const code = result.codeResult.code;
+    if (code && code.length >= 10) {
+      stopScanner();
+      lookupISBN(code);
+    }
+  });
+}
+
+function stopScanner() {
+  try { Quagga.stop(); } catch(e) {}
+  scannerRunning = false;
+  document.getElementById('scan-btn').textContent = '▶ Avvia';
+  document.getElementById('scan-overlay').style.display = 'none';
+  document.getElementById('scanner-placeholder').style.display = 'flex';
+}
+
+function toggleManual() {
+  const area = document.getElementById('manual-area');
+  area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+  if (area.style.display === 'flex') document.getElementById('manual-isbn').focus();
+}
+
+// ─── ISBN LOOKUP ───────────────────────────────────────
+async function lookupISBN(isbn) {
+  isbn = isbn.replace(/[-\s]/g, '');
+  if (!isbn || isbn.length < 10) { showStatus('ISBN non valido', 'error'); return; }
+  showStatus('🔍 Ricerca ISBN ' + isbn + '...', 'loading');
+
+  // Google Books
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+    const data = await res.json();
+    if (data.totalItems > 0) {
+      const info = data.items[0].volumeInfo;
+      const { nome, cognome } = splitAuthor((info.authors || [''])[0]);
+      fillForm(nome, cognome, info.title || '', info.publisher || '');
+      showStatus('', '');
+      return;
+    }
+  } catch(e) {}
+
+  // Open Library fallback
+  try {
+    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    const data = await res.json();
+    const book = data[`ISBN:${isbn}`];
+    if (book) {
+      const { nome, cognome } = splitAuthor((book.authors || [])[0]?.name || '');
+      const editore = (book.publishers || [])[0]?.name || '';
+      fillForm(nome, cognome, book.title || '', editore);
+      showStatus('', '');
+      return;
+    }
+  } catch(e) {}
+
+  showStatus('Libro non trovato — compila manualmente.', 'error');
+  fillForm('', '', '', '');
+}
+
+function splitAuthor(fullName) {
+  fullName = (fullName || '').trim();
+  if (!fullName) return { nome: '', cognome: '' };
+  if (fullName.includes(',')) {
+    const [cog, nom] = fullName.split(',').map(s => s.trim());
+    return { nome: nom || '', cognome: cog };
+  }
+  const parts = fullName.split(' ');
+  return { cognome: parts[parts.length - 1], nome: parts.slice(0, -1).join(' ') };
+}
+
+function fillForm(nome, cognome, titolo, editore) {
+  document.getElementById('f-nome').value = nome;
+  document.getElementById('f-cognome').value = cognome;
+  document.getElementById('f-titolo').value = titolo;
+  document.getElementById('f-editore').value = editore;
+  document.getElementById('book-form-area').style.display = 'block';
+  document.getElementById('f-titolo').focus();
+}
+
+function resetForm() {
+  document.getElementById('book-form-area').style.display = 'none';
+  ['f-nome','f-cognome','f-titolo','f-editore'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.tag-opt').forEach(t => t.classList.remove('selected'));
+  currentTag = '';
+  showStatus('', '');
+}
+
+// ─── TAG / LETTORE ─────────────────────────────────────
+function selectTag(el, val) {
+  document.querySelectorAll('.tag-opt').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  currentTag = val;
+}
+
+function renderTagSelector() {
+  document.getElementById('tag-selector').innerHTML =
+    tags.map(t => `<div class="tag-opt" onclick="selectTag(this,'${t}')">${t}</div>`).join('') +
+    `<div class="tag-opt" onclick="selectTag(this,'')">—</div>`;
+}
+
+function loadTags() {
+  const saved = localStorage.getItem('scanLibri_tags');
+  if (saved) tags = JSON.parse(saved);
+  const input = document.getElementById('tags-input');
+  if (input) input.value = tags.join(', ');
+}
+
+function saveTags() {
+  tags = document.getElementById('tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
+  localStorage.setItem('scanLibri_tags', JSON.stringify(tags));
+  renderTagSelector();
+  showStatus('Lettori salvati!', 'success');
+}
+
+// ─── SAVE TO SHEET ─────────────────────────────────────
+async function saveBook() {
+  const cat = CATEGORIES[activeCat];
+  const tabName = getSelectedTab();
+  const nome     = document.getElementById('f-nome').value.trim();
+  const cognome  = document.getElementById('f-cognome').value.trim();
+  const titolo   = document.getElementById('f-titolo').value.trim();
+  const editore  = document.getElementById('f-editore').value.trim();
+  const autore   = [nome, cognome].filter(Boolean).join(' ');
+
+  if (!titolo) { showStatus('Inserisci almeno il titolo', 'error'); return; }
+  showStatus('Salvataggio...', 'loading');
+
+  try {
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}/values/${encodeURIComponent(tabName + '!A:F')}:append?valueInputOption=USER_ENTERED`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[autore, nome, cognome, titolo, editore, currentTag]] })
+      }
+    );
+
+    if (res.status === 401) { signOut(); return; }
+    if (!res.ok) {
+      const err = await res.json();
+      showStatus('Errore: ' + (err.error?.message || res.status), 'error');
+      return;
+    }
+
+    showStatus(`✓ "${titolo}" salvato in ${cat.name}${tabName ? ' → ' + tabName : ''}`, 'success');
+    resetForm();
+    document.getElementById('manual-isbn').value = '';
+
+  } catch(e) {
+    showStatus('Errore di rete: ' + e.message, 'error');
+  }
+}
+
+// ─── STATUS ────────────────────────────────────────────
+function showStatus(msg, type) {
+  const bar = document.getElementById('status-bar');
+  bar.textContent = msg;
+  bar.className = type || '';
+  bar.style.display = (type && msg) ? 'block' : 'none';
+}
+
+// ─── SETTINGS ──────────────────────────────────────────
+function renderSettingsCatList() {
+  document.getElementById('cat-list').innerHTML = CATEGORIES.map(c =>
+    `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+      <span style="font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--ink);">${c.name}</span>
+      <span style="font-family:'DM Mono',monospace; font-size:0.6rem; color:var(--ink-light);">${c.sheetId.substring(0,14)}…</span>
+    </div>`
+  ).join('');
+}
+
+// ─── INIT ──────────────────────────────────────────────
+checkAuth();
+</script>
+</body>
+</html>
