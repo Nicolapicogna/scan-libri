@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Scan Libri</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -17,496 +16,152 @@
   --red-soft: #fdf0ed;
   --green: #1a7a4a;
   --green-soft: #edf7f2;
+  --blue: #1a4fa0;
+  --blue-soft: #edf2fd;
   --radius: 16px;
   --radius-sm: 10px;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--off); color: var(--ink); overscroll-behavior: none; }
 
-html, body {
-  height: 100%;
-  font-family: 'Geist', sans-serif;
-  background: var(--off);
-  color: var(--ink);
-  overscroll-behavior: none;
-}
+#root { display: flex; flex-direction: column; height: 100dvh; max-width: 480px; margin: 0 auto; background: var(--white); }
+#topbar { padding: 20px 24px 0; flex-shrink: 0; }
+.wordmark { display: flex; align-items: baseline; gap: 8px; }
+.wordmark h1 { font-family: 'Instrument Serif', serif; font-size: 1.7rem; font-weight: 400; letter-spacing: -0.02em; }
+.wordmark .badge { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); }
 
-/* ── LAYOUT ─────────────────────────────── */
-#root {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  max-width: 480px;
-  margin: 0 auto;
-  background: var(--white);
-  position: relative;
-}
-
-#topbar {
-  padding: 20px 24px 0;
-  flex-shrink: 0;
-}
-
-.wordmark {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.wordmark h1 {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.7rem;
-  font-weight: 400;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-}
-.wordmark .badge {
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mid);
-}
-
-/* ── SCROLLABLE CONTENT ─────────────────── */
-#content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 24px 24px;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ── AUTH ───────────────────────────────── */
-#auth-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-  padding: 0 0 40px;
-}
-
-.auth-hero {
-  text-align: center;
-  margin-bottom: 40px;
-}
-.auth-hero .big-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-  display: block;
-}
-.auth-hero h2 {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.8rem;
-  font-weight: 400;
-  margin-bottom: 10px;
-}
-.auth-hero p {
-  font-size: 0.9rem;
-  color: var(--mid);
-  line-height: 1.6;
-  max-width: 280px;
-  margin: 0 auto;
-}
-
-/* ── BUTTONS ────────────────────────────── */
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 15px 20px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: 'Geist', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  -webkit-appearance: none;
-}
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px 20px; border: none; border-radius: var(--radius-sm); font-family: 'Geist', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; -webkit-appearance: none; }
 .btn:active { transform: scale(0.98); opacity: 0.85; }
-
 .btn-primary { background: var(--ink); color: var(--white); }
 .btn-ghost { background: var(--off); color: var(--ink); }
 .btn-danger { background: var(--red-soft); color: var(--red); }
-.btn-sm {
-  padding: 10px 16px;
-  font-size: 0.82rem;
-  border-radius: var(--radius-sm);
-}
+.btn-sm { padding: 10px 16px; font-size: 0.82rem; }
 
-/* ── CATEGORY PILLS ─────────────────────── */
-#cat-scroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 16px 0 4px;
-  scrollbar-width: none;
-  flex-shrink: 0;
-}
-#cat-scroll::-webkit-scrollbar { display: none; }
+/* AUTH */
+#auth-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+.auth-hero { text-align: center; margin-bottom: 40px; }
+.auth-hero .big-icon { font-size: 4rem; display: block; margin-bottom: 16px; }
+.auth-hero h2 { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 10px; }
+.auth-hero p { font-size: 0.9rem; color: var(--mid); line-height: 1.6; max-width: 280px; margin: 0 auto; }
 
-.cat-pill {
-  flex-shrink: 0;
-  padding: 8px 16px;
-  border-radius: 100px;
-  border: 1.5px solid var(--light);
-  background: var(--white);
-  font-family: 'Geist', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--mid);
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.cat-pill.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--white);
-}
+/* APP */
+#app-root { display: none; flex-direction: column; flex: 1; overflow: hidden; }
 
-/* ── TAB SELECTOR ───────────────────────── */
-#tab-row {
-  display: none;
-  gap: 8px;
-  padding: 8px 0 4px;
-  flex-shrink: 0;
-}
-#tab-row.visible { display: flex; }
-
-.tab-pill {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  border-radius: 100px;
-  border: 1.5px solid var(--light);
-  background: var(--white);
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--mid);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.tab-pill.active {
-  background: var(--off);
-  border-color: var(--ink);
-  color: var(--ink);
-}
-
-/* ── STATUS ─────────────────────────────── */
-#status-bar {
-  display: none;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
-  font-weight: 400;
-  line-height: 1.4;
-  margin: 12px 0 0;
-}
+/* STATUS */
+#status-bar { display: none; margin: 10px 24px 0; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 0.82rem; line-height: 1.4; flex-shrink: 0; }
 #status-bar.success { display: block; background: var(--green-soft); color: var(--green); }
-#status-bar.error   { display: block; background: var(--red-soft);   color: var(--red); }
-#status-bar.loading {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--off); color: var(--mid);
-}
-.spinner {
-  width: 14px; height: 14px;
-  border: 2px solid var(--light);
-  border-top-color: var(--mid);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
-}
+#status-bar.error   { display: block; background: var(--red-soft); color: var(--red); }
+#status-bar.loading { display: flex; align-items: center; gap: 8px; background: var(--off); color: var(--mid); }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--light); border-top-color: var(--mid); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── SCANNER ────────────────────────────── */
-#scanner-wrap {
-  margin: 16px 0 0;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--ink);
-  position: relative;
-  aspect-ratio: 4/3;
-  max-height: 280px;
-}
+/* SCROLL */
+#scroll-area { flex: 1; overflow-y: auto; padding: 16px 24px 24px; -webkit-overflow-scrolling: touch; }
 
-#preview-video {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: none;
-}
-
-.scan-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 10px;
-  color: #555;
-}
+/* SCANNER */
+#scanner-wrap { border-radius: var(--radius); overflow: hidden; background: #000; position: relative; width: 100%; aspect-ratio: 4/3; max-height: 260px; }
+#preview-video { width: 100%; height: 100%; object-fit: cover; display: none; }
+#scan-canvas { display: none; }
+.scan-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: #666; }
 .scan-placeholder .icon { font-size: 3rem; }
-.scan-placeholder p { font-size: 0.78rem; color: #666; }
+.scan-placeholder p { font-size: 0.78rem; }
+.scan-overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; }
+.scan-overlay.active { display: flex; }
+.scan-frame { width: 65%; height: 38%; position: relative; }
+.scan-frame::before, .scan-frame::after, .scan-frame .c1, .scan-frame .c2 { content: ''; position: absolute; width: 22px; height: 22px; border-color: white; border-style: solid; }
+.scan-frame::before { top:0; left:0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+.scan-frame::after  { top:0; right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+.scan-frame .c1 { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+.scan-frame .c2 { bottom:0; left:0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+.scan-line { position: absolute; left:0; right:0; height: 2px; background: linear-gradient(90deg, transparent, var(--red) 30%, var(--red) 70%, transparent); animation: scanline 1.8s ease-in-out infinite; box-shadow: 0 0 6px var(--red); }
+@keyframes scanline { 0%,100% { top:0; } 50% { top: calc(100% - 2px); } }
+.beep-flash { position: absolute; inset: 0; background: rgba(255,255,255,0.5); opacity: 0; pointer-events: none; }
+.beep-flash.flash { animation: flash 0.3s ease-out; }
+@keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
 
-.scan-frame-overlay {
-  position: absolute;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.scan-frame-overlay.active { display: flex; }
-
-.scan-frame {
-  width: 60%;
-  height: 38%;
-  position: relative;
-  border-radius: 4px;
-}
-
-/* Corner marks */
-.scan-frame::before, .scan-frame::after,
-.scan-frame .corner-br, .scan-frame .corner-bl {
-  content: '';
-  position: absolute;
-  width: 20px; height: 20px;
-  border-color: white;
-  border-style: solid;
-}
-.scan-frame::before  { top: 0; left: 0;  border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
-.scan-frame::after   { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
-.scan-frame .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
-.scan-frame .corner-bl { bottom: 0; left: 0;  border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
-
-.scan-line {
-  position: absolute;
-  left: 0; right: 0; height: 1.5px;
-  background: linear-gradient(90deg, transparent, var(--red), transparent);
-  animation: scanline 2s ease-in-out infinite;
-}
-@keyframes scanline { 0%,100% { top: 0; } 50% { top: calc(100% - 2px); } }
-
-/* ── SCAN ACTIONS ───────────────────────── */
-.scan-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 12px 0 0;
-}
-
-/* ── MANUAL ISBN ────────────────────────── */
-.manual-row {
-  display: none;
-  gap: 10px;
-  margin: 10px 0 0;
-  align-items: stretch;
-}
+.scan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.manual-row { display: none; gap: 10px; margin-top: 10px; }
 .manual-row.visible { display: flex; }
-
-.isbn-input {
-  flex: 1;
-  padding: 13px 16px;
-  border: 1.5px solid var(--light);
-  border-radius: var(--radius-sm);
-  font-family: 'Geist', monospace;
-  font-size: 0.9rem;
-  color: var(--ink);
-  background: var(--white);
-  outline: none;
-  transition: border-color 0.15s;
-}
+.isbn-input { flex: 1; padding: 13px 16px; border: 1.5px solid var(--light); border-radius: var(--radius-sm); font-family: 'Geist', monospace; font-size: 0.9rem; color: var(--ink); background: var(--white); outline: none; }
 .isbn-input:focus { border-color: var(--ink); }
 
-/* ── BOOK CARD ──────────────────────────── */
-#book-card {
+/* SUGGESTION BANNER */
+#suggestion-banner {
+  display: none;
+  background: var(--blue-soft);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 14px;
+  gap: 10px;
+  flex-direction: column;
+}
+#suggestion-banner.visible { display: flex; }
+.suggestion-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--blue); margin-bottom: 2px; }
+.suggestion-text { font-size: 0.88rem; color: var(--ink); font-weight: 500; }
+.suggestion-actions { display: flex; gap: 8px; }
+.sug-btn { flex: 1; padding: 9px 12px; border-radius: var(--radius-sm); border: none; font-family: 'Geist', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+.sug-btn-confirm { background: var(--blue); color: white; }
+.sug-btn-change { background: var(--white); color: var(--ink); border: 1.5px solid var(--light) !important; }
+
+/* DESTINATION PICKER */
+#dest-picker {
   display: none;
   background: var(--off);
   border-radius: var(--radius);
-  padding: 20px;
-  margin: 16px 0 0;
+  padding: 16px;
+  margin-top: 14px;
 }
+#dest-picker.visible { display: block; }
+.dest-title { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
+.dest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dest-btn { padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--light); background: var(--white); font-family: 'Geist', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--ink); cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.3; }
+.dest-btn.active { border-color: var(--ink); background: var(--ink); color: var(--white); }
+.dest-btn .dest-sub { font-size: 0.65rem; color: var(--mid); display: block; margin-top: 2px; }
+.dest-btn.active .dest-sub { color: rgba(255,255,255,0.6); }
 
-.book-card-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.2rem;
-  font-weight: 400;
-  margin-bottom: 16px;
-  color: var(--ink);
-}
+/* TAB PICKER inside dest */
+#tab-picker { display: none; margin-top: 10px; }
+#tab-picker.visible { display: block; }
+.tab-picker-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.tab-btns { display: flex; gap: 8px; }
+.tab-btn { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--light); background: var(--white); font-family: 'Geist', sans-serif; font-size: 0.82rem; font-weight: 500; color: var(--mid); cursor: pointer; text-align: center; transition: all 0.15s; }
+.tab-btn.active { border-color: var(--ink); background: var(--ink); color: var(--white); }
 
+/* BOOK CARD */
+#book-card { display: none; background: var(--off); border-radius: var(--radius); padding: 20px; margin-top: 14px; }
+.book-card-title { font-family: 'Instrument Serif', serif; font-size: 1.2rem; font-weight: 400; margin-bottom: 16px; }
 .field { margin-bottom: 12px; }
-.field label {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--mid);
-  margin-bottom: 5px;
-}
-.field input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--light);
-  border-radius: var(--radius-sm);
-  font-family: 'Geist', sans-serif;
-  font-size: 0.9rem;
-  color: var(--ink);
-  background: var(--white);
-  outline: none;
-  transition: border-color 0.15s;
-}
+.field label { display: block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mid); margin-bottom: 5px; }
+.field input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--light); border-radius: var(--radius-sm); font-family: 'Geist', sans-serif; font-size: 0.9rem; color: var(--ink); background: var(--white); outline: none; }
 .field input:focus { border-color: var(--ink); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-/* ── LETTORE SELECTOR ───────────────────── */
-.lettore-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-.lettore-btn {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 1.5px solid var(--light);
-  background: var(--white);
-  font-family: 'Geist', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--mid);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center;
-}
+.lettore-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.lettore-btn { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--light); background: var(--white); font-size: 0.9rem; font-weight: 600; color: var(--mid); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
 .lettore-btn.active { background: var(--ink); border-color: var(--ink); color: var(--white); }
-.lettore-btn.none-btn { font-size: 1.1rem; font-weight: 400; }
+.card-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.btn-x { padding: 15px 18px; border-radius: var(--radius-sm); border: none; background: var(--light); cursor: pointer; font-size: 1rem; }
 
-.card-actions {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-}
-.btn-cancel {
-  padding: 15px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--light);
-  cursor: pointer;
-  font-size: 1rem;
-  transition: opacity 0.15s;
-}
-.btn-cancel:active { opacity: 0.7; }
+/* SETTINGS */
+#settings-view { display: none; padding-top: 4px; }
+.section-title { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-weight: 400; margin: 16px 0 12px; }
+.setting-block { background: var(--off); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+.setting-block h4 { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mid); margin-bottom: 12px; }
+.tags-row { display: flex; gap: 8px; }
+.tags-row input { flex: 1; padding: 11px 14px; border: 1.5px solid var(--light); border-radius: var(--radius-sm); font-family: 'Geist', monospace; font-size: 0.88rem; background: var(--white); color: var(--ink); outline: none; }
+.tags-row input:focus { border-color: var(--ink); }
+.cat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--light); }
+.cat-row:last-child { border-bottom: none; padding-bottom: 0; }
+.cat-row-name { font-size: 0.88rem; font-weight: 500; }
+.cat-row-id { font-size: 0.68rem; color: var(--mid); font-family: monospace; }
 
-/* ── SETTINGS VIEW ──────────────────────── */
-#settings-view {
-  display: none;
-  padding-top: 8px;
-}
-
-.section-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.3rem;
-  font-weight: 400;
-  margin: 20px 0 12px;
-  color: var(--ink);
-}
-
-.setting-block {
-  background: var(--off);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin-bottom: 12px;
-}
-.setting-block h4 {
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--mid);
-  margin-bottom: 10px;
-}
-
-.tags-edit-row {
-  display: flex;
-  gap: 8px;
-}
-.tags-edit-row input {
-  flex: 1;
-  padding: 11px 14px;
-  border: 1.5px solid var(--light);
-  border-radius: var(--radius-sm);
-  font-family: 'Geist', monospace;
-  font-size: 0.88rem;
-  background: var(--white);
-  color: var(--ink);
-  outline: none;
-}
-.tags-edit-row input:focus { border-color: var(--ink); }
-
-.cat-setting-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--light);
-}
-.cat-setting-row:last-child { border-bottom: none; padding-bottom: 0; }
-.cat-setting-name { font-size: 0.88rem; font-weight: 500; }
-.cat-setting-id { font-size: 0.68rem; color: var(--mid); font-family: 'Geist', monospace; }
-
-/* ── BOTTOM NAV ─────────────────────────── */
-#bottom-nav {
-  display: none;
-  flex-shrink: 0;
-  border-top: 1px solid var(--light);
-  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
-  background: var(--white);
-}
-
-.nav-inner {
-  display: flex;
-  background: var(--off);
-  border-radius: 100px;
-  padding: 4px;
-  gap: 4px;
-}
-
-.nav-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 100px;
-  background: transparent;
-  font-family: 'Geist', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--mid);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.nav-btn.active {
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-.nav-btn .nav-icon { font-size: 1rem; }
-
-/* ── DIVIDER ────────────────────────────── */
-.divider {
-  height: 1px;
-  background: var(--light);
-  margin: 8px 0;
-}
+/* NAV */
+#bottom-nav { flex-shrink: 0; border-top: 1px solid var(--light); padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: var(--white); }
+.nav-inner { display: flex; background: var(--off); border-radius: 100px; padding: 4px; gap: 4px; }
+.nav-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 100px; background: transparent; font-family: 'Geist', sans-serif; font-size: 0.8rem; font-weight: 500; color: var(--mid); cursor: pointer; transition: all 0.2s; }
+.nav-btn.active { background: var(--white); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 </style>
 </head>
 <body>
-
 <div id="root">
   <div id="topbar">
     <div class="wordmark">
@@ -515,37 +170,21 @@ html, body {
     </div>
   </div>
 
-  <!-- ── AUTH ── -->
-  <div id="content">
-  <div id="auth-section">
+  <!-- AUTH -->
+  <div id="auth-wrap">
     <div class="auth-hero">
       <span class="big-icon">📚</span>
       <h2>La tua libreria digitale</h2>
-      <p>Scansiona i codici ISBN e salva i libri direttamente nei tuoi Google Sheet.</p>
+      <p>Scansiona i codici ISBN e salva i libri nei tuoi Google Sheet.</p>
     </div>
-    <button class="btn btn-primary" onclick="signIn()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Accedi con Google
-    </button>
-  </div>
+    <button class="btn btn-primary" onclick="signIn()">🔑 Accedi con Google</button>
   </div>
 
-  <!-- ── APP ── -->
-  <div id="app-root" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+  <!-- APP -->
+  <div id="app-root">
+    <div id="status-bar"></div>
 
-    <!-- category pills -->
-    <div style="padding: 0 24px; flex-shrink:0;">
-      <div id="cat-scroll"></div>
-      <div id="tab-row"></div>
-    </div>
-
-    <!-- status -->
-    <div style="padding: 0 24px; flex-shrink:0;">
-      <div id="status-bar"></div>
-    </div>
-
-    <!-- scrollable area -->
-    <div id="content" style="flex:1; overflow-y:auto; padding: 0 24px 24px;">
+    <div id="scroll-area">
 
       <!-- SCANNER VIEW -->
       <div id="scanner-view">
@@ -555,64 +194,62 @@ html, body {
             <p>Premi Scansiona per iniziare</p>
           </div>
           <video id="preview-video" autoplay playsinline muted></video>
-          <div class="scan-frame-overlay" id="scan-overlay">
+          <canvas id="scan-canvas"></canvas>
+          <div class="scan-overlay" id="scan-overlay">
             <div class="scan-frame">
               <div class="scan-line"></div>
-              <div class="corner-br"></div>
-              <div class="corner-bl"></div>
+              <div class="c1"></div><div class="c2"></div>
             </div>
           </div>
+          <div class="beep-flash" id="beep-flash"></div>
         </div>
 
         <div class="scan-actions">
-          <button class="btn btn-primary" id="scan-btn" onclick="toggleScanner()">
-            <span id="scan-btn-icon">▶</span> Scansiona
-          </button>
-          <button class="btn btn-ghost" onclick="toggleManual()">
-            ✏️ Manuale
-          </button>
+          <button class="btn btn-primary" id="scan-btn" onclick="toggleScanner()">▶ Scansiona</button>
+          <button class="btn btn-ghost" onclick="toggleManual()">✏️ Manuale</button>
         </div>
 
         <div class="manual-row" id="manual-area">
           <input class="isbn-input" type="text" id="manual-isbn" placeholder="978-..." maxlength="17"
-            onkeydown="if(event.key==='Enter') lookupISBN(this.value.replace(/[-\s]/g,''))">
-          <button class="btn btn-primary btn-sm" style="flex-shrink:0; width:auto;"
-            onclick="lookupISBN(document.getElementById('manual-isbn').value.replace(/[-\s]/g,''))">Cerca</button>
+            onkeydown="if(event.key==='Enter') lookupISBN(this.value)">
+          <button class="btn btn-primary btn-sm" style="flex-shrink:0;width:auto;" onclick="lookupISBN(document.getElementById('manual-isbn').value)">Cerca</button>
+        </div>
+
+        <!-- SUGGESTION BANNER -->
+        <div id="suggestion-banner">
+          <div>
+            <div class="suggestion-label">📍 Destinazione suggerita</div>
+            <div class="suggestion-text" id="suggestion-text"></div>
+          </div>
+          <div class="suggestion-actions">
+            <button class="sug-btn sug-btn-confirm" onclick="confirmSuggestion()">✓ Confermo</button>
+            <button class="sug-btn sug-btn-change" onclick="changeSuggestion()">Cambia</button>
+          </div>
+        </div>
+
+        <!-- DESTINATION PICKER -->
+        <div id="dest-picker">
+          <div class="dest-title">Dove va questo libro?</div>
+          <div class="dest-grid" id="dest-grid"></div>
+          <div id="tab-picker">
+            <div class="tab-picker-label" style="margin-top:12px;">Sezione</div>
+            <div class="tab-btns" id="tab-btns"></div>
+          </div>
         </div>
 
         <!-- BOOK CARD -->
         <div id="book-card">
           <div class="book-card-title">Dati del libro</div>
-
-          <div class="field">
-            <label>Titolo</label>
-            <input type="text" id="f-titolo" placeholder="Titolo">
-          </div>
-
+          <div class="field"><label>Titolo</label><input type="text" id="f-titolo" placeholder="Titolo"></div>
           <div class="field-row">
-            <div class="field">
-              <label>Nome</label>
-              <input type="text" id="f-nome" placeholder="Nome">
-            </div>
-            <div class="field">
-              <label>Cognome</label>
-              <input type="text" id="f-cognome" placeholder="Cognome">
-            </div>
+            <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Nome"></div>
+            <div class="field"><label>Cognome</label><input type="text" id="f-cognome" placeholder="Cognome"></div>
           </div>
-
-          <div class="field">
-            <label>Editore</label>
-            <input type="text" id="f-editore" placeholder="Editore">
-          </div>
-
-          <div class="field">
-            <label>Lettore</label>
-            <div class="lettore-row" id="lettore-row"></div>
-          </div>
-
+          <div class="field"><label>Editore</label><input type="text" id="f-editore" placeholder="Editore"></div>
+          <div class="field"><label>Lettore</label><div class="lettore-row" id="lettore-row"></div></div>
           <div class="card-actions">
             <button class="btn btn-primary" onclick="saveBook()">💾 Salva nel foglio</button>
-            <button class="btn-cancel" onclick="resetForm()">✕</button>
+            <button class="btn-x" onclick="resetAll()">✕</button>
           </div>
         </div>
       </div>
@@ -620,233 +257,176 @@ html, body {
       <!-- SETTINGS VIEW -->
       <div id="settings-view">
         <div class="section-title">Impostazioni</div>
-
         <div class="setting-block">
           <h4>Lettori</h4>
-          <div class="tags-edit-row">
+          <div class="tags-row">
             <input type="text" id="tags-input" placeholder="N, F, A, B">
-            <button class="btn btn-ghost btn-sm" style="flex-shrink:0; width:auto;" onclick="saveTags()">Salva</button>
+            <button class="btn btn-ghost btn-sm" style="flex-shrink:0;width:auto;" onclick="saveTags()">Salva</button>
           </div>
         </div>
-
         <div class="setting-block">
           <h4>Categorie collegate</h4>
           <div id="cat-list"></div>
         </div>
-
-        <div class="divider"></div>
         <button class="btn btn-danger" onclick="signOut()" style="margin-top:4px;">Esci dall'account</button>
       </div>
 
-    </div><!-- end scrollable -->
+    </div><!-- scroll-area -->
 
-    <!-- BOTTOM NAV -->
-    <div id="bottom-nav" style="display:flex;">
-      <div class="nav-inner" style="width:100%;">
-        <button class="nav-btn active" id="nav-scan" onclick="showView('scan')">
-          <span class="nav-icon">📷</span> Scansiona
-        </button>
-        <button class="nav-btn" id="nav-settings" onclick="showView('settings')">
-          <span class="nav-icon">⚙️</span> Impostazioni
-        </button>
+    <div id="bottom-nav">
+      <div class="nav-inner">
+        <button class="nav-btn active" id="nav-scan" onclick="showView('scan')"><span>📷</span> Scansiona</button>
+        <button class="nav-btn" id="nav-settings" onclick="showView('settings')"><span>⚙️</span> Impostazioni</button>
       </div>
     </div>
-
-  </div><!-- end app-root -->
-
-</div><!-- end root -->
+  </div>
+</div>
 
 <script type="module">
 import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm';
 
+// ── CATEGORIES ────────────────────────────────────────
 const CATEGORIES = [
-  { name: '01 Narrativa',        sheetId: '19SXHAYn7ETE1uGVuJXH14SiiJ7QMx1MOmej2F5_0ExE', exclude: ['Editori'] },
-  { name: '02 Saggi',            sheetId: '1GsqPrCb-lyGEP-GKEi4lrcDLj7KdNjQTs0ADOaNBJU8', exclude: ['Editori'] },
-  { name: 'Architettura/Design', sheetId: '1titzEKFrx6XE35i12XrPWiIISZla30QaH0a4NwOnuS4', exclude: ['Editori'] },
-  { name: 'Arte',                sheetId: '1xAr_9-_Vuq4rS2K4K6xO7V2D34eqBLDUrRRadyDr5Ow', exclude: ['Editori'] },
-  { name: 'Cinema/Fotografia',   sheetId: '1cjVHErs-lXLqMXOrfOu3PIAXeA8CUbWM4YvxawF9XkU', exclude: ['Editori'] },
-  { name: 'Escursionistica',     sheetId: '1Rh6QC5Y4_fX9pV53wzcT3Vc8c2WPBJG-c4cF34LijyM', exclude: ['Editori'] },
-  { name: 'Friuli',              sheetId: '1fyhewJRc6BX2MZSVIAG4MjE1-D0dia2oqJDdraozcDc', exclude: ['Editori'] },
-  { name: 'Illustrazione',       sheetId: '1ViQgJaZo5Hl9wyPUKRXNJ8W2KDZ4ljlZdJlsB66dFPQ', exclude: ['Editori'] },
-  { name: 'Saggi Naturalistici', sheetId: '15Kt0lndSmmxum33_zY-OZnMfBh3cOTesAIKHqByy-v0', exclude: ['Editori'] },
+  { name: '01 Narrativa',        sheetId: '19SXHAYn7ETE1uGVuJXH14SiiJ7QMx1MOmej2F5_0ExE', tabs: ['ITALIANA','STRANIERA'] },
+  { name: '02 Saggi',            sheetId: '1GsqPrCb-lyGEP-GKEi4lrcDLj7KdNjQTs0ADOaNBJU8', tabs: null },
+  { name: 'Architettura/Design', sheetId: '1titzEKFrx6XE35i12XrPWiIISZla30QaH0a4NwOnuS4', tabs: null },
+  { name: 'Arte',                sheetId: '1xAr_9-_Vuq4rS2K4K6xO7V2D34eqBLDUrRRadyDr5Ow', tabs: null },
+  { name: 'Cinema/Fotografia',   sheetId: '1cjVHErs-lXLqMXOrfOu3PIAXeA8CUbWM4YvxawF9XkU', tabs: null },
+  { name: 'Escursionistica',     sheetId: '1Rh6QC5Y4_fX9pV53wzcT3Vc8c2WPBJG-c4cF34LijyM', tabs: null },
+  { name: 'Friuli',              sheetId: '1fyhewJRc6BX2MZSVIAG4MjE1-D0dia2oqJDdraozcDc', tabs: null },
+  { name: 'Illustrazione',       sheetId: '1ViQgJaZo5Hl9wyPUKRXNJ8W2KDZ4ljlZdJlsB66dFPQ', tabs: null },
+  { name: 'Saggi Naturalistici', sheetId: '15Kt0lndSmmxum33_zY-OZnMfBh3cOTesAIKHqByy-v0', tabs: null },
 ];
+
+// Mappatura generi Google Books → categoria
+const GENRE_MAP = {
+  'fiction': 0, 'novel': 0, 'literary': 0, 'narrative': 0, 'romanzo': 0, 'narrativa': 0,
+  'poetry': 0, 'drama': 0, 'short stories': 0,
+  'history': 1, 'philosophy': 1, 'psychology': 1, 'sociology': 1, 'politics': 1,
+  'economics': 1, 'science': 1, 'biography': 1, 'autobiography': 1, 'essay': 1, 'saggio': 1,
+  'architecture': 2, 'design': 2, 'interior': 2,
+  'art': 3, 'painting': 3, 'sculpture': 3, 'museum': 3,
+  'photography': 4, 'film': 4, 'cinema': 4, 'movie': 4,
+  'travel': 5, 'hiking': 5, 'nature': 5, 'outdoor': 5, 'mountain': 5,
+  'illustration': 7, 'comic': 7, 'graphic': 7,
+  'natural history': 8, 'ecology': 8, 'botany': 8, 'zoology': 8, 'environment': 8,
+};
 
 const CLIENT_ID = '601610748136-ng08e20fs8re2qavfgknbdupvl0q8ni1.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 let accessToken = null;
-let activeCat = 0;
-let activeTab = null;
-let tabsCache = {};
+let tags = ['N','F'];
 let currentTag = '';
-let tags = ['N', 'F'];
-let scannerRunning = false;
-let codeReader = null;
-let videoStream = null;
+let scannerRunning = false, videoStream = null, scanInterval = null;
+let tabsCache = {};
+
+// Current book state
+let currentBook = null; // { titolo, nome, cognome, editore, language, genres }
+let selectedCatIdx = null;
+let selectedTab = null;
 
 const hints = new Map();
 hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128]);
 hints.set(DecodeHintType.TRY_HARDER, true);
+const reader = new BrowserMultiFormatReader(hints);
 
-// ── AUTH ────────────────────────────────────────────────
+// ── AUTH ──────────────────────────────────────────────
 window.signIn = () => {
-  const p = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: location.href.split('?')[0].split('#')[0],
-    response_type: 'token', scope: SCOPES, prompt: 'consent'
-  });
+  const p = new URLSearchParams({ client_id: CLIENT_ID, redirect_uri: location.href.split('?')[0].split('#')[0], response_type: 'token', scope: SCOPES, prompt: 'consent' });
   location.href = 'https://accounts.google.com/o/oauth2/auth?' + p;
 };
-
 window.signOut = () => {
-  accessToken = null;
-  localStorage.removeItem('sl_token');
-  document.getElementById('auth-section').parentElement.style.display = 'flex';
+  accessToken = null; localStorage.removeItem('sl_token');
+  document.getElementById('auth-wrap').style.display = 'flex';
   document.getElementById('app-root').style.display = 'none';
 };
-
 function checkAuth() {
-  const hash = new URLSearchParams(location.hash.substring(1));
-  if (hash.get('access_token')) {
-    accessToken = hash.get('access_token');
-    localStorage.setItem('sl_token', accessToken);
-    history.replaceState({}, '', location.pathname);
-  } else {
-    accessToken = localStorage.getItem('sl_token');
-  }
+  const h = new URLSearchParams(location.hash.substring(1));
+  if (h.get('access_token')) { accessToken = h.get('access_token'); localStorage.setItem('sl_token', accessToken); history.replaceState({}, '', location.pathname); }
+  else accessToken = localStorage.getItem('sl_token');
   if (accessToken) showApp();
 }
-
 async function showApp() {
-  document.getElementById('auth-section').parentElement.style.display = 'none';
-  const appRoot = document.getElementById('app-root');
-  appRoot.style.display = 'flex';
-  document.getElementById('bottom-nav').style.display = 'flex';
-  loadTags();
-  renderLettoreSelector();
-  renderCatPills();
-  renderCatList();
-  await loadTabs(activeCat);
+  document.getElementById('auth-wrap').style.display = 'none';
+  document.getElementById('app-root').style.display = 'flex';
+  loadTags(); renderLettore(); renderCatList();
+  // Preload tabs for Narrativa (has multiple)
+  await loadTabsForCat(0);
 }
 
-// ── TABS ────────────────────────────────────────────────
-async function loadTabs(i) {
+// ── TABS ──────────────────────────────────────────────
+async function loadTabsForCat(i) {
   const cat = CATEGORIES[i];
-  if (tabsCache[cat.sheetId]) { renderTabPills(tabsCache[cat.sheetId], cat.exclude || []); return; }
-
+  if (cat.tabs) { tabsCache[cat.sheetId] = cat.tabs; return; } // hardcoded
+  if (tabsCache[cat.sheetId]) return;
   try {
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}?fields=sheets.properties.title`,
-      { headers: { Authorization: 'Bearer ' + accessToken } }
-    );
-    if (res.status === 401) { window.signOut(); return; }
-    const data = await res.json();
-    tabsCache[cat.sheetId] = data.sheets.map(s => s.properties.title);
-    renderTabPills(tabsCache[cat.sheetId], cat.exclude || []);
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}?fields=sheets.properties.title`, { headers: { Authorization: 'Bearer '+accessToken } });
+    if (r.status===401) { window.signOut(); return; }
+    const d = await r.json();
+    // exclude Editori
+    tabsCache[cat.sheetId] = d.sheets.map(s=>s.properties.title).filter(t=>t!=='Editori');
   } catch(e) {}
 }
 
-function renderTabPills(tabs, exclude) {
-  const filtered = tabs.filter(t => !exclude.includes(t));
-  const row = document.getElementById('tab-row');
-  row.innerHTML = filtered.map(t =>
-    `<button class="tab-pill ${!activeTab || activeTab === t ? (filtered.indexOf(t) === 0 && !activeTab ? 'active' : '') : ''}"
-      onclick="selectTab('${t}', this)">${t}</button>`
-  ).join('');
-  // auto-select first
-  if (!activeTab && filtered.length > 0) {
-    activeTab = filtered[0];
-    row.querySelector('.tab-pill')?.classList.add('active');
-  }
-  row.className = filtered.length > 1 ? 'tab-row visible' : 'tab-row';
-  // fix id
-  row.id = 'tab-row';
-}
+function getTabsFor(i) { return tabsCache[CATEGORIES[i].sheetId] || null; }
 
-window.selectTab = (name, el) => {
-  activeTab = name;
-  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-};
-
-function getTab() {
-  const cat = CATEGORIES[activeCat];
-  const tabs = tabsCache[cat.sheetId];
-  if (!tabs) return 'Foglio1';
-  const filtered = tabs.filter(t => !(cat.exclude || []).includes(t));
-  return activeTab || filtered[0] || tabs[0];
-}
-
-// ── CATEGORY PILLS ──────────────────────────────────────
-function renderCatPills() {
-  document.getElementById('cat-scroll').innerHTML = CATEGORIES.map((c, i) =>
-    `<button class="cat-pill ${i === activeCat ? 'active' : ''}" onclick="selectCat(${i})">${c.name}</button>`
-  ).join('');
-}
-
-window.selectCat = async (i) => {
-  activeCat = i; activeTab = null;
-  renderCatPills(); resetForm();
-  await loadTabs(i);
-};
-
-// ── VIEWS ────────────────────────────────────────────────
+// ── VIEWS ─────────────────────────────────────────────
 window.showView = (view) => {
-  document.getElementById('scanner-view').style.display = view === 'scan' ? 'block' : 'none';
-  document.getElementById('settings-view').style.display = view === 'settings' ? 'block' : 'none';
-  document.getElementById('nav-scan').classList.toggle('active', view === 'scan');
-  document.getElementById('nav-settings').classList.toggle('active', view === 'settings');
-  document.getElementById('cat-scroll').style.display = view === 'scan' ? 'flex' : 'none';
-  if (view !== 'scan' && scannerRunning) stopScanner();
+  document.getElementById('scanner-view').style.display = view==='scan' ? 'block' : 'none';
+  document.getElementById('settings-view').style.display = view==='settings' ? 'block' : 'none';
+  document.getElementById('nav-scan').classList.toggle('active', view==='scan');
+  document.getElementById('nav-settings').classList.toggle('active', view==='settings');
+  if (view!=='scan' && scannerRunning) stopScanner();
 };
 
-// ── SCANNER ──────────────────────────────────────────────
-window.toggleScanner = async () => {
-  if (scannerRunning) stopScanner(); else await startScanner();
-};
+// ── SCANNER ───────────────────────────────────────────
+window.toggleScanner = async () => { if (scannerRunning) stopScanner(); else await startScanner(); };
 
 async function startScanner() {
-  scannerRunning = true;
-  document.getElementById('scan-placeholder').style.display = 'none';
-  document.getElementById('scan-btn').innerHTML = '⏹ Ferma';
-
   try {
     videoStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 }, height: { ideal: 720 }
-      }
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
     });
     const video = document.getElementById('preview-video');
-    video.srcObject = videoStream;
-    video.style.display = 'block';
-    document.getElementById('scan-overlay').classList.add('active');
-
+    video.srcObject = videoStream; video.style.display = 'block'; await video.play();
     const track = videoStream.getVideoTracks()[0];
-    try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous', exposureMode: 'continuous' }] }); } catch(e) {}
+    try { await track.applyConstraints({ advanced: [{ focusMode:'continuous', exposureMode:'continuous', whiteBalanceMode:'continuous' }] }); } catch(e) {}
+    document.getElementById('scan-placeholder').style.display = 'none';
+    document.getElementById('scan-overlay').classList.add('active');
+    document.getElementById('scan-btn').textContent = '⏹ Ferma';
+    scannerRunning = true;
 
-    codeReader = new BrowserMultiFormatReader(hints);
-    codeReader.decodeFromStream(videoStream, video, (result) => {
-      if (result) {
-        const code = result.getText();
-        if (code && code.length >= 10) { stopScanner(); lookupISBN(code); }
-      }
-    });
-  } catch(e) {
-    showStatus('Errore fotocamera: ' + e.message, 'error');
-    stopScanner();
-  }
+    const canvas = document.getElementById('scan-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    scanInterval = setInterval(async () => {
+      if (!scannerRunning || video.readyState < 2) return;
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      try {
+        const result = reader.decodeFromCanvas(canvas);
+        if (result) {
+          const code = result.getText();
+          if (code && code.length >= 10) {
+            const flash = document.getElementById('beep-flash');
+            flash.classList.remove('flash'); void flash.offsetWidth; flash.classList.add('flash');
+            stopScanner(); lookupISBN(code);
+          }
+        }
+      } catch(e) {}
+    }, 300);
+  } catch(e) { showStatus('Errore fotocamera: '+e.message, 'error'); stopScanner(); }
 }
 
 function stopScanner() {
   scannerRunning = false;
-  document.getElementById('scan-btn').innerHTML = '▶ Scansiona';
-  document.getElementById('scan-overlay').classList.remove('active');
-  if (codeReader) { try { codeReader.reset(); } catch(e) {} codeReader = null; }
-  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (videoStream) { videoStream.getTracks().forEach(t=>t.stop()); videoStream = null; }
   const video = document.getElementById('preview-video');
   video.srcObject = null; video.style.display = 'none';
+  document.getElementById('scan-overlay').classList.remove('active');
   document.getElementById('scan-placeholder').style.display = 'flex';
+  document.getElementById('scan-btn').textContent = '▶ Scansiona';
 }
 
 window.toggleManual = () => {
@@ -855,143 +435,237 @@ window.toggleManual = () => {
   if (a.classList.contains('visible')) document.getElementById('manual-isbn').focus();
 };
 
-// ── ISBN LOOKUP ──────────────────────────────────────────
+// ── ISBN LOOKUP ───────────────────────────────────────
 window.lookupISBN = async (isbn) => {
-  isbn = (isbn || '').replace(/[-\s]/g, '');
+  isbn = (isbn||'').replace(/[-\s]/g,'');
   if (isbn.length < 10) { showStatus('ISBN non valido', 'error'); return; }
   showStatus('Ricerca in corso…', 'loading');
+  resetBookUI();
 
+  let bookData = null;
+
+  // Google Books
   try {
     const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
     const d = await r.json();
     if (d.totalItems > 0) {
       const info = d.items[0].volumeInfo;
-      const { nome, cognome } = splitAuthor((info.authors || [''])[0]);
-      fillForm(nome, cognome, info.title || '', info.publisher || '');
-      showStatus('', ''); return;
+      const {nome,cognome} = splitAuthor((info.authors||[''])[0]);
+      bookData = {
+        nome, cognome,
+        titolo: info.title || '',
+        editore: info.publisher || '',
+        language: info.language || '',
+        categories: info.categories || [],
+      };
     }
   } catch(e) {}
 
-  try {
-    const r = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-    const d = await r.json();
-    const b = d[`ISBN:${isbn}`];
-    if (b) {
-      const { nome, cognome } = splitAuthor((b.authors || [])[0]?.name || '');
-      fillForm(nome, cognome, b.title || '', (b.publishers || [])[0]?.name || '');
-      showStatus('', ''); return;
-    }
-  } catch(e) {}
+  // Open Library fallback
+  if (!bookData) {
+    try {
+      const r = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+      const d = await r.json();
+      const b = d[`ISBN:${isbn}`];
+      if (b) {
+        const {nome,cognome} = splitAuthor((b.authors||[])[0]?.name||'');
+        bookData = { nome, cognome, titolo: b.title||'', editore: (b.publishers||[])[0]?.name||'', language: '', categories: [] };
+      }
+    } catch(e) {}
+  }
 
-  showStatus('Libro non trovato — compila manualmente.', 'error');
-  fillForm('', '', '', '');
+  if (!bookData) {
+    showStatus('Libro non trovato — compila manualmente.', 'error');
+    bookData = { nome:'', cognome:'', titolo:'', editore:'', language:'', categories:[] };
+  } else {
+    showStatus('', '');
+  }
+
+  currentBook = bookData;
+  fillForm(bookData.nome, bookData.cognome, bookData.titolo, bookData.editore);
+
+  // Suggest category
+  const suggested = suggestCategory(bookData);
+  showSuggestion(suggested, bookData);
 };
 
-function splitAuthor(s) {
-  s = (s || '').trim();
-  if (!s) return { nome: '', cognome: '' };
-  if (s.includes(',')) { const [c,n] = s.split(',').map(x=>x.trim()); return { nome: n||'', cognome: c }; }
-  const p = s.split(' ');
-  return { cognome: p[p.length-1], nome: p.slice(0,-1).join(' ') };
+// ── CATEGORY SUGGESTION ───────────────────────────────
+function suggestCategory(book) {
+  // Check genres
+  const allText = [...book.categories].join(' ').toLowerCase();
+  for (const [keyword, idx] of Object.entries(GENRE_MAP)) {
+    if (allText.includes(keyword)) return idx;
+  }
+  // Default: if language is italian → Narrativa ITALIANA, else STRANIERA
+  return 0; // default to Narrativa
 }
 
+function showSuggestion(catIdx, book) {
+  selectedCatIdx = catIdx;
+  const cat = CATEGORIES[catIdx];
+  const tabs = getTabsFor(catIdx);
+
+  // Auto-detect tab for Narrativa based on language
+  if (catIdx === 0 && tabs) {
+    selectedTab = (book.language === 'it') ? 'ITALIANA' : 'STRANIERA';
+  } else {
+    selectedTab = tabs ? tabs[0] : null;
+  }
+
+  const tabLabel = selectedTab ? ` › ${selectedTab}` : '';
+  document.getElementById('suggestion-text').textContent = `${cat.name}${tabLabel}`;
+  document.getElementById('suggestion-banner').classList.add('visible');
+}
+
+window.confirmSuggestion = () => {
+  document.getElementById('suggestion-banner').classList.remove('visible');
+  document.getElementById('dest-picker').classList.remove('visible');
+  // book-card already visible, just proceed
+};
+
+window.changeSuggestion = () => {
+  document.getElementById('suggestion-banner').classList.remove('visible');
+  showDestPicker();
+};
+
+function showDestPicker() {
+  const picker = document.getElementById('dest-picker');
+  picker.classList.add('visible');
+  const grid = document.getElementById('dest-grid');
+  grid.innerHTML = CATEGORIES.map((c,i) => `
+    <button class="dest-btn ${i===selectedCatIdx?'active':''}" onclick="selectDest(${i}, this)">
+      ${c.name}
+    </button>
+  `).join('');
+  renderTabPicker(selectedCatIdx);
+}
+
+window.selectDest = async (i, el) => {
+  selectedCatIdx = i;
+  document.querySelectorAll('.dest-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  await loadTabsForCat(i);
+  renderTabPicker(i);
+};
+
+function renderTabPicker(catIdx) {
+  const tabs = getTabsFor(catIdx);
+  const picker = document.getElementById('tab-picker');
+  const btns = document.getElementById('tab-btns');
+  if (!tabs || tabs.length <= 1) {
+    picker.classList.remove('visible');
+    selectedTab = tabs ? tabs[0] : null;
+    return;
+  }
+  picker.classList.add('visible');
+  if (!selectedTab || !tabs.includes(selectedTab)) selectedTab = tabs[0];
+  btns.innerHTML = tabs.map(t =>
+    `<button class="tab-btn ${t===selectedTab?'active':''}" onclick="selectTabBtn('${t}',this)">${t}</button>`
+  ).join('');
+}
+
+window.selectTabBtn = (t, el) => {
+  selectedTab = t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+// ── FORM ──────────────────────────────────────────────
 function fillForm(nome, cognome, titolo, editore) {
   document.getElementById('f-nome').value = nome;
   document.getElementById('f-cognome').value = cognome;
   document.getElementById('f-titolo').value = titolo;
   document.getElementById('f-editore').value = editore;
   document.getElementById('book-card').style.display = 'block';
-  document.getElementById('f-titolo').focus();
 }
 
-function resetForm() {
+function resetBookUI() {
+  document.getElementById('suggestion-banner').classList.remove('visible');
+  document.getElementById('dest-picker').classList.remove('visible');
   document.getElementById('book-card').style.display = 'none';
-  ['f-nome','f-cognome','f-titolo','f-editore'].forEach(id => document.getElementById(id).value = '');
-  document.querySelectorAll('.lettore-btn').forEach(b => b.classList.remove('active'));
-  currentTag = ''; showStatus('', '');
+  document.querySelectorAll('.lettore-btn').forEach(b=>b.classList.remove('active'));
+  currentTag = ''; currentBook = null; selectedCatIdx = null; selectedTab = null;
 }
 
-// ── LETTORE ──────────────────────────────────────────────
-window.selectLettore = (el, val) => {
-  document.querySelectorAll('.lettore-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active'); currentTag = val;
+window.resetAll = () => {
+  resetBookUI();
+  showStatus('', '');
+  document.getElementById('manual-isbn').value = '';
 };
 
-function renderLettoreSelector() {
-  document.getElementById('lettore-row').innerHTML =
-    tags.map(t => `<button class="lettore-btn" onclick="selectLettore(this,'${t}')">${t}</button>`).join('') +
-    `<button class="lettore-btn none-btn" onclick="selectLettore(this,'')">—</button>`;
+function splitAuthor(s) {
+  s = (s||'').trim();
+  if (!s) return {nome:'',cognome:''};
+  if (s.includes(',')) { const [c,n]=s.split(',').map(x=>x.trim()); return {nome:n||'',cognome:c}; }
+  const p = s.split(' ');
+  return {cognome:p[p.length-1], nome:p.slice(0,-1).join(' ')};
 }
 
+// ── LETTORE ───────────────────────────────────────────
+window.selectLettore = (el,val) => {
+  document.querySelectorAll('.lettore-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); currentTag=val;
+};
+function renderLettore() {
+  document.getElementById('lettore-row').innerHTML =
+    tags.map(t=>`<button class="lettore-btn" onclick="selectLettore(this,'${t}')">${t}</button>`).join('') +
+    `<button class="lettore-btn" onclick="selectLettore(this,'')">—</button>`;
+}
 function loadTags() {
   const s = localStorage.getItem('sl_tags');
   if (s) tags = JSON.parse(s);
   const inp = document.getElementById('tags-input');
   if (inp) inp.value = tags.join(', ');
 }
-
 window.saveTags = () => {
   tags = document.getElementById('tags-input').value.split(',').map(t=>t.trim()).filter(Boolean);
   localStorage.setItem('sl_tags', JSON.stringify(tags));
-  renderLettoreSelector();
-  showStatus('Lettori aggiornati!', 'success');
+  renderLettore(); showStatus('Lettori aggiornati!','success');
 };
 
-// ── SAVE ─────────────────────────────────────────────────
+// ── SAVE ──────────────────────────────────────────────
 window.saveBook = async () => {
-  const cat = CATEGORIES[activeCat];
-  const tab = getTab();
+  if (selectedCatIdx === null) { showStatus('Scegli una destinazione', 'error'); return; }
+  const cat = CATEGORIES[selectedCatIdx];
+  const tabs = getTabsFor(selectedCatIdx);
+  const tab = selectedTab || (tabs ? tabs[0] : 'Foglio1');
+
   const nome    = document.getElementById('f-nome').value.trim();
   const cognome = document.getElementById('f-cognome').value.trim();
   const titolo  = document.getElementById('f-titolo').value.trim();
   const editore = document.getElementById('f-editore').value.trim();
-  const autore  = [nome, cognome].filter(Boolean).join(' ');
+  const autore  = [nome,cognome].filter(Boolean).join(' ');
 
   if (!titolo) { showStatus('Il titolo è obbligatorio', 'error'); return; }
-  showStatus('Salvataggio…', 'loading');
+  showStatus('Salvataggio…','loading');
 
   try {
     const res = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}/values/${encodeURIComponent(tab+'!A:F')}:append?valueInputOption=USER_ENTERED`,
-      {
-        method: 'POST',
-        headers: { Authorization: 'Bearer '+accessToken, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[autore, nome, cognome, titolo, editore, currentTag]] })
-      }
+      { method:'POST', headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'}, body:JSON.stringify({values:[[autore,nome,cognome,titolo,editore,currentTag]]}) }
     );
-    if (res.status === 401) { window.signOut(); return; }
-    if (!res.ok) { const e = await res.json(); showStatus('Errore: '+(e.error?.message||res.status), 'error'); return; }
-    showStatus(`✓ "${titolo}" salvato in ${cat.name}${tab ? ' › '+tab : ''}`, 'success');
-    resetForm();
-    document.getElementById('manual-isbn').value = '';
-  } catch(e) {
-    showStatus('Errore di rete: '+e.message, 'error');
-  }
+    if (res.status===401) { window.signOut(); return; }
+    if (!res.ok) { const e=await res.json(); showStatus('Errore: '+(e.error?.message||res.status),'error'); return; }
+    showStatus(`✓ "${titolo}" → ${cat.name}${tab?' › '+tab:''}`, 'success');
+    resetAll();
+  } catch(e) { showStatus('Errore di rete: '+e.message,'error'); }
 };
 
-// ── STATUS ───────────────────────────────────────────────
+// ── STATUS ────────────────────────────────────────────
 function showStatus(msg, type) {
   const bar = document.getElementById('status-bar');
-  bar.className = type || '';
-  bar.style.display = (type && msg) ? 'block' : 'none';
-  if (type === 'loading') {
-    bar.innerHTML = `<div class="spinner"></div> ${msg}`;
-    bar.style.display = 'flex';
-  } else {
-    bar.textContent = msg;
-  }
+  bar.className = type||'';
+  bar.style.display = (type&&msg)?'block':'none';
+  if (type==='loading') { bar.innerHTML=`<div class="spinner"></div> ${msg}`; bar.style.display='flex'; }
+  else bar.textContent = msg;
 }
 
 function renderCatList() {
-  document.getElementById('cat-list').innerHTML = CATEGORIES.map(c =>
-    `<div class="cat-setting-row">
-      <span class="cat-setting-name">${c.name}</span>
-      <span class="cat-setting-id">${c.sheetId.substring(0,12)}…</span>
-    </div>`
+  document.getElementById('cat-list').innerHTML = CATEGORIES.map(c=>
+    `<div class="cat-row"><span class="cat-row-name">${c.name}</span><span class="cat-row-id">${c.sheetId.substring(0,12)}…</span></div>`
   ).join('');
 }
 
-// ── INIT ─────────────────────────────────────────────────
 checkAuth();
 </script>
 </body>
