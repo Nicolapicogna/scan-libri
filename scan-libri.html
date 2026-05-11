@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Scan Libri</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -58,26 +59,17 @@ html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--o
 /* SCROLL */
 #scroll-area { flex: 1; overflow-y: auto; padding: 16px 24px 24px; -webkit-overflow-scrolling: touch; }
 
-/* SCANNER */
-#scanner-wrap { border-radius: var(--radius); overflow: hidden; background: #000; position: relative; width: 100%; aspect-ratio: 4/3; max-height: 260px; }
-#preview-video { width: 100%; height: 100%; object-fit: cover; display: none; }
-#scan-canvas { display: none; }
-.scan-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: #666; }
-.scan-placeholder .icon { font-size: 3rem; }
-.scan-placeholder p { font-size: 0.78rem; }
-.scan-overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; }
-.scan-overlay.active { display: flex; }
-.scan-frame { width: 65%; height: 38%; position: relative; }
-.scan-frame::before, .scan-frame::after, .scan-frame .c1, .scan-frame .c2 { content: ''; position: absolute; width: 22px; height: 22px; border-color: white; border-style: solid; }
-.scan-frame::before { top:0; left:0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
-.scan-frame::after  { top:0; right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
-.scan-frame .c1 { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
-.scan-frame .c2 { bottom:0; left:0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
-.scan-line { position: absolute; left:0; right:0; height: 2px; background: linear-gradient(90deg, transparent, var(--red) 30%, var(--red) 70%, transparent); animation: scanline 1.8s ease-in-out infinite; box-shadow: 0 0 6px var(--red); }
-@keyframes scanline { 0%,100% { top:0; } 50% { top: calc(100% - 2px); } }
-.beep-flash { position: absolute; inset: 0; background: rgba(255,255,255,0.5); opacity: 0; pointer-events: none; }
-.beep-flash.flash { animation: flash 0.3s ease-out; }
-@keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+/* SCANNER — html5-qrcode renders inside #reader */
+#reader {
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: 100% !important;
+}
+/* Override html5-qrcode default styles */
+#reader video { border-radius: var(--radius) !important; }
+#reader img { display: none !important; }
+#reader__scan_region { border-radius: var(--radius); }
+#reader__dashboard { display: none !important; } /* hide default buttons */
 
 .scan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .manual-row { display: none; gap: 10px; margin-top: 10px; }
@@ -85,42 +77,24 @@ html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--o
 .isbn-input { flex: 1; padding: 13px 16px; border: 1.5px solid var(--light); border-radius: var(--radius-sm); font-family: 'Geist', monospace; font-size: 0.9rem; color: var(--ink); background: var(--white); outline: none; }
 .isbn-input:focus { border-color: var(--ink); }
 
-/* SUGGESTION BANNER */
-#suggestion-banner {
-  display: none;
-  background: var(--blue-soft);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  margin-top: 14px;
-  gap: 10px;
-  flex-direction: column;
-}
-#suggestion-banner.visible { display: flex; }
-.suggestion-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--blue); margin-bottom: 2px; }
-.suggestion-text { font-size: 0.88rem; color: var(--ink); font-weight: 500; }
+/* SUGGESTION */
+#suggestion-banner { display: none; background: var(--blue-soft); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 14px; }
+#suggestion-banner.visible { display: block; }
+.suggestion-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--blue); margin-bottom: 4px; }
+.suggestion-dest { font-size: 1rem; color: var(--ink); font-weight: 500; margin-bottom: 12px; }
 .suggestion-actions { display: flex; gap: 8px; }
-.sug-btn { flex: 1; padding: 9px 12px; border-radius: var(--radius-sm); border: none; font-family: 'Geist', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-.sug-btn-confirm { background: var(--blue); color: white; }
-.sug-btn-change { background: var(--white); color: var(--ink); border: 1.5px solid var(--light) !important; }
+.sug-btn { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: none; font-family: 'Geist', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; }
+.sug-confirm { background: var(--blue); color: white; }
+.sug-change { background: var(--white); color: var(--ink); border: 1.5px solid var(--light) !important; }
 
-/* DESTINATION PICKER */
-#dest-picker {
-  display: none;
-  background: var(--off);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-top: 14px;
-}
+/* DEST PICKER */
+#dest-picker { display: none; background: var(--off); border-radius: var(--radius); padding: 16px; margin-top: 14px; }
 #dest-picker.visible { display: block; }
 .dest-title { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
 .dest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.dest-btn { padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--light); background: var(--white); font-family: 'Geist', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--ink); cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.3; }
+.dest-btn { padding: 11px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--light); background: var(--white); font-family: 'Geist', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--ink); cursor: pointer; text-align: left; transition: all 0.15s; }
 .dest-btn.active { border-color: var(--ink); background: var(--ink); color: var(--white); }
-.dest-btn .dest-sub { font-size: 0.65rem; color: var(--mid); display: block; margin-top: 2px; }
-.dest-btn.active .dest-sub { color: rgba(255,255,255,0.6); }
-
-/* TAB PICKER inside dest */
-#tab-picker { display: none; margin-top: 10px; }
+#tab-picker { display: none; margin-top: 12px; }
 #tab-picker.visible { display: block; }
 .tab-picker-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .tab-btns { display: flex; gap: 8px; }
@@ -183,26 +157,11 @@ html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--o
   <!-- APP -->
   <div id="app-root">
     <div id="status-bar"></div>
-
     <div id="scroll-area">
 
       <!-- SCANNER VIEW -->
       <div id="scanner-view">
-        <div id="scanner-wrap">
-          <div class="scan-placeholder" id="scan-placeholder">
-            <span class="icon">📷</span>
-            <p>Premi Scansiona per iniziare</p>
-          </div>
-          <video id="preview-video" autoplay playsinline muted></video>
-          <canvas id="scan-canvas"></canvas>
-          <div class="scan-overlay" id="scan-overlay">
-            <div class="scan-frame">
-              <div class="scan-line"></div>
-              <div class="c1"></div><div class="c2"></div>
-            </div>
-          </div>
-          <div class="beep-flash" id="beep-flash"></div>
-        </div>
+        <div id="reader"></div>
 
         <div class="scan-actions">
           <button class="btn btn-primary" id="scan-btn" onclick="toggleScanner()">▶ Scansiona</button>
@@ -212,22 +171,21 @@ html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--o
         <div class="manual-row" id="manual-area">
           <input class="isbn-input" type="text" id="manual-isbn" placeholder="978-..." maxlength="17"
             onkeydown="if(event.key==='Enter') lookupISBN(this.value)">
-          <button class="btn btn-primary btn-sm" style="flex-shrink:0;width:auto;" onclick="lookupISBN(document.getElementById('manual-isbn').value)">Cerca</button>
+          <button class="btn btn-primary btn-sm" style="flex-shrink:0;width:auto;"
+            onclick="lookupISBN(document.getElementById('manual-isbn').value)">Cerca</button>
         </div>
 
-        <!-- SUGGESTION BANNER -->
+        <!-- SUGGESTION -->
         <div id="suggestion-banner">
-          <div>
-            <div class="suggestion-label">📍 Destinazione suggerita</div>
-            <div class="suggestion-text" id="suggestion-text"></div>
-          </div>
+          <div class="suggestion-label">📍 Destinazione suggerita</div>
+          <div class="suggestion-dest" id="suggestion-dest"></div>
           <div class="suggestion-actions">
-            <button class="sug-btn sug-btn-confirm" onclick="confirmSuggestion()">✓ Confermo</button>
-            <button class="sug-btn sug-btn-change" onclick="changeSuggestion()">Cambia</button>
+            <button class="sug-btn sug-confirm" onclick="confirmSuggestion()">✓ Confermo</button>
+            <button class="sug-btn sug-change" onclick="changeSuggestion()">Cambia</button>
           </div>
         </div>
 
-        <!-- DESTINATION PICKER -->
+        <!-- DEST PICKER -->
         <div id="dest-picker">
           <div class="dest-title">Dove va questo libro?</div>
           <div class="dest-grid" id="dest-grid"></div>
@@ -282,10 +240,7 @@ html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--o
   </div>
 </div>
 
-<script type="module">
-import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm';
-
-// ── CATEGORIES ────────────────────────────────────────
+<script>
 const CATEGORIES = [
   { name: '01 Narrativa',        sheetId: '19SXHAYn7ETE1uGVuJXH14SiiJ7QMx1MOmej2F5_0ExE', tabs: ['ITALIANA','STRANIERA'] },
   { name: '02 Saggi',            sheetId: '1GsqPrCb-lyGEP-GKEi4lrcDLj7KdNjQTs0ADOaNBJU8', tabs: null },
@@ -298,145 +253,126 @@ const CATEGORIES = [
   { name: 'Saggi Naturalistici', sheetId: '15Kt0lndSmmxum33_zY-OZnMfBh3cOTesAIKHqByy-v0', tabs: null },
 ];
 
-// Mappatura generi Google Books → categoria
 const GENRE_MAP = {
-  'fiction': 0, 'novel': 0, 'literary': 0, 'narrative': 0, 'romanzo': 0, 'narrativa': 0,
-  'poetry': 0, 'drama': 0, 'short stories': 0,
-  'history': 1, 'philosophy': 1, 'psychology': 1, 'sociology': 1, 'politics': 1,
-  'economics': 1, 'science': 1, 'biography': 1, 'autobiography': 1, 'essay': 1, 'saggio': 1,
-  'architecture': 2, 'design': 2, 'interior': 2,
-  'art': 3, 'painting': 3, 'sculpture': 3, 'museum': 3,
-  'photography': 4, 'film': 4, 'cinema': 4, 'movie': 4,
-  'travel': 5, 'hiking': 5, 'nature': 5, 'outdoor': 5, 'mountain': 5,
-  'illustration': 7, 'comic': 7, 'graphic': 7,
-  'natural history': 8, 'ecology': 8, 'botany': 8, 'zoology': 8, 'environment': 8,
+  'fiction':0,'novel':0,'literary':0,'narrative':0,'romanzo':0,'narrativa':0,'poetry':0,'drama':0,'short stories':0,
+  'history':1,'philosophy':1,'psychology':1,'sociology':1,'politics':1,'economics':1,'science':1,'biography':1,'autobiography':1,'essay':1,
+  'architecture':2,'design':2,'interior':2,
+  'art':3,'painting':3,'sculpture':3,
+  'photography':4,'film':4,'cinema':4,'movie':4,
+  'travel':5,'hiking':5,'nature':5,'outdoor':5,'mountain':5,
+  'illustration':7,'comic':7,'graphic novel':7,
+  'natural history':8,'ecology':8,'botany':8,'zoology':8,'environment':8,
 };
 
 const CLIENT_ID = '601610748136-ng08e20fs8re2qavfgknbdupvl0q8ni1.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 let accessToken = null;
-let tags = ['N','F'];
-let currentTag = '';
-let scannerRunning = false, videoStream = null, scanInterval = null;
+let tags = ['N','F'], currentTag = '';
+let scannerRunning = false;
+let html5Scanner = null;
 let tabsCache = {};
-
-// Current book state
-let currentBook = null; // { titolo, nome, cognome, editore, language, genres }
-let selectedCatIdx = null;
-let selectedTab = null;
-
-const hints = new Map();
-hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128]);
-hints.set(DecodeHintType.TRY_HARDER, true);
-const reader = new BrowserMultiFormatReader(hints);
+let currentBook = null, selectedCatIdx = null, selectedTab = null;
 
 // ── AUTH ──────────────────────────────────────────────
-window.signIn = () => {
+function signIn() {
   const p = new URLSearchParams({ client_id: CLIENT_ID, redirect_uri: location.href.split('?')[0].split('#')[0], response_type: 'token', scope: SCOPES, prompt: 'consent' });
   location.href = 'https://accounts.google.com/o/oauth2/auth?' + p;
-};
-window.signOut = () => {
+}
+function signOut() {
   accessToken = null; localStorage.removeItem('sl_token');
   document.getElementById('auth-wrap').style.display = 'flex';
   document.getElementById('app-root').style.display = 'none';
-};
+}
 function checkAuth() {
   const h = new URLSearchParams(location.hash.substring(1));
   if (h.get('access_token')) { accessToken = h.get('access_token'); localStorage.setItem('sl_token', accessToken); history.replaceState({}, '', location.pathname); }
   else accessToken = localStorage.getItem('sl_token');
   if (accessToken) showApp();
 }
-async function showApp() {
+function showApp() {
   document.getElementById('auth-wrap').style.display = 'none';
   document.getElementById('app-root').style.display = 'flex';
   loadTags(); renderLettore(); renderCatList();
-  // Preload tabs for Narrativa (has multiple)
-  await loadTabsForCat(0);
 }
 
 // ── TABS ──────────────────────────────────────────────
 async function loadTabsForCat(i) {
   const cat = CATEGORIES[i];
-  if (cat.tabs) { tabsCache[cat.sheetId] = cat.tabs; return; } // hardcoded
+  if (cat.tabs) { tabsCache[cat.sheetId] = cat.tabs; return; }
   if (tabsCache[cat.sheetId]) return;
   try {
     const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}?fields=sheets.properties.title`, { headers: { Authorization: 'Bearer '+accessToken } });
-    if (r.status===401) { window.signOut(); return; }
+    if (r.status===401) { signOut(); return; }
     const d = await r.json();
-    // exclude Editori
     tabsCache[cat.sheetId] = d.sheets.map(s=>s.properties.title).filter(t=>t!=='Editori');
   } catch(e) {}
 }
-
 function getTabsFor(i) { return tabsCache[CATEGORIES[i].sheetId] || null; }
 
 // ── VIEWS ─────────────────────────────────────────────
-window.showView = (view) => {
+function showView(view) {
   document.getElementById('scanner-view').style.display = view==='scan' ? 'block' : 'none';
   document.getElementById('settings-view').style.display = view==='settings' ? 'block' : 'none';
   document.getElementById('nav-scan').classList.toggle('active', view==='scan');
   document.getElementById('nav-settings').classList.toggle('active', view==='settings');
-  if (view!=='scan' && scannerRunning) stopScanner();
-};
-
-// ── SCANNER ───────────────────────────────────────────
-window.toggleScanner = async () => { if (scannerRunning) stopScanner(); else await startScanner(); };
-
-async function startScanner() {
-  try {
-    videoStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-    });
-    const video = document.getElementById('preview-video');
-    video.srcObject = videoStream; video.style.display = 'block'; await video.play();
-    const track = videoStream.getVideoTracks()[0];
-    try { await track.applyConstraints({ advanced: [{ focusMode:'continuous', exposureMode:'continuous', whiteBalanceMode:'continuous' }] }); } catch(e) {}
-    document.getElementById('scan-placeholder').style.display = 'none';
-    document.getElementById('scan-overlay').classList.add('active');
-    document.getElementById('scan-btn').textContent = '⏹ Ferma';
-    scannerRunning = true;
-
-    const canvas = document.getElementById('scan-canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    scanInterval = setInterval(async () => {
-      if (!scannerRunning || video.readyState < 2) return;
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      try {
-        const result = reader.decodeFromCanvas(canvas);
-        if (result) {
-          const code = result.getText();
-          if (code && code.length >= 10) {
-            const flash = document.getElementById('beep-flash');
-            flash.classList.remove('flash'); void flash.offsetWidth; flash.classList.add('flash');
-            stopScanner(); lookupISBN(code);
-          }
-        }
-      } catch(e) {}
-    }, 300);
-  } catch(e) { showStatus('Errore fotocamera: '+e.message, 'error'); stopScanner(); }
+  if (view !== 'scan' && scannerRunning) stopScanner();
 }
 
-function stopScanner() {
+// ── SCANNER (html5-qrcode) ────────────────────────────
+async function toggleScanner() {
+  if (scannerRunning) stopScanner(); else await startScanner();
+}
+
+async function startScanner() {
+  if (!html5Scanner) {
+    html5Scanner = new Html5Qrcode('reader');
+  }
+  try {
+    await html5Scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 10,
+        qrbox: { width: 280, height: 120 },
+        aspectRatio: 1.5,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+        ]
+      },
+      (decodedText) => {
+        if (decodedText && decodedText.length >= 10) {
+          stopScanner();
+          lookupISBN(decodedText);
+        }
+      },
+      () => {} // ignore errors (no barcode in frame)
+    );
+    scannerRunning = true;
+    document.getElementById('scan-btn').textContent = '⏹ Ferma';
+  } catch(e) {
+    showStatus('Errore fotocamera: ' + e, 'error');
+  }
+}
+
+async function stopScanner() {
+  if (html5Scanner && scannerRunning) {
+    try { await html5Scanner.stop(); } catch(e) {}
+  }
   scannerRunning = false;
-  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-  if (videoStream) { videoStream.getTracks().forEach(t=>t.stop()); videoStream = null; }
-  const video = document.getElementById('preview-video');
-  video.srcObject = null; video.style.display = 'none';
-  document.getElementById('scan-overlay').classList.remove('active');
-  document.getElementById('scan-placeholder').style.display = 'flex';
   document.getElementById('scan-btn').textContent = '▶ Scansiona';
 }
 
-window.toggleManual = () => {
+function toggleManual() {
   const a = document.getElementById('manual-area');
   a.classList.toggle('visible');
   if (a.classList.contains('visible')) document.getElementById('manual-isbn').focus();
-};
+}
 
 // ── ISBN LOOKUP ───────────────────────────────────────
-window.lookupISBN = async (isbn) => {
+async function lookupISBN(isbn) {
   isbn = (isbn||'').replace(/[-\s]/g,'');
   if (isbn.length < 10) { showStatus('ISBN non valido', 'error'); return; }
   showStatus('Ricerca in corso…', 'loading');
@@ -444,24 +380,16 @@ window.lookupISBN = async (isbn) => {
 
   let bookData = null;
 
-  // Google Books
   try {
     const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
     const d = await r.json();
     if (d.totalItems > 0) {
       const info = d.items[0].volumeInfo;
       const {nome,cognome} = splitAuthor((info.authors||[''])[0]);
-      bookData = {
-        nome, cognome,
-        titolo: info.title || '',
-        editore: info.publisher || '',
-        language: info.language || '',
-        categories: info.categories || [],
-      };
+      bookData = { nome, cognome, titolo: info.title||'', editore: info.publisher||'', language: info.language||'', categories: info.categories||[] };
     }
   } catch(e) {}
 
-  // Open Library fallback
   if (!bookData) {
     try {
       const r = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
@@ -469,7 +397,7 @@ window.lookupISBN = async (isbn) => {
       const b = d[`ISBN:${isbn}`];
       if (b) {
         const {nome,cognome} = splitAuthor((b.authors||[])[0]?.name||'');
-        bookData = { nome, cognome, titolo: b.title||'', editore: (b.publishers||[])[0]?.name||'', language: '', categories: [] };
+        bookData = { nome, cognome, titolo: b.title||'', editore: (b.publishers||[])[0]?.name||'', language:'', categories:[] };
       }
     } catch(e) {}
   }
@@ -484,69 +412,60 @@ window.lookupISBN = async (isbn) => {
   currentBook = bookData;
   fillForm(bookData.nome, bookData.cognome, bookData.titolo, bookData.editore);
 
-  // Suggest category
   const suggested = suggestCategory(bookData);
+  await loadTabsForCat(suggested);
   showSuggestion(suggested, bookData);
-};
+}
 
-// ── CATEGORY SUGGESTION ───────────────────────────────
+// ── SUGGESTION ────────────────────────────────────────
 function suggestCategory(book) {
-  // Check genres
-  const allText = [...book.categories].join(' ').toLowerCase();
-  for (const [keyword, idx] of Object.entries(GENRE_MAP)) {
-    if (allText.includes(keyword)) return idx;
+  const allText = book.categories.join(' ').toLowerCase();
+  for (const [kw, idx] of Object.entries(GENRE_MAP)) {
+    if (allText.includes(kw)) return idx;
   }
-  // Default: if language is italian → Narrativa ITALIANA, else STRANIERA
-  return 0; // default to Narrativa
+  return 0;
 }
 
 function showSuggestion(catIdx, book) {
   selectedCatIdx = catIdx;
   const cat = CATEGORIES[catIdx];
   const tabs = getTabsFor(catIdx);
-
-  // Auto-detect tab for Narrativa based on language
   if (catIdx === 0 && tabs) {
     selectedTab = (book.language === 'it') ? 'ITALIANA' : 'STRANIERA';
   } else {
     selectedTab = tabs ? tabs[0] : null;
   }
-
   const tabLabel = selectedTab ? ` › ${selectedTab}` : '';
-  document.getElementById('suggestion-text').textContent = `${cat.name}${tabLabel}`;
+  document.getElementById('suggestion-dest').textContent = cat.name + tabLabel;
   document.getElementById('suggestion-banner').classList.add('visible');
 }
 
-window.confirmSuggestion = () => {
+function confirmSuggestion() {
   document.getElementById('suggestion-banner').classList.remove('visible');
   document.getElementById('dest-picker').classList.remove('visible');
-  // book-card already visible, just proceed
-};
+}
 
-window.changeSuggestion = () => {
+function changeSuggestion() {
   document.getElementById('suggestion-banner').classList.remove('visible');
   showDestPicker();
-};
+}
 
 function showDestPicker() {
-  const picker = document.getElementById('dest-picker');
-  picker.classList.add('visible');
+  document.getElementById('dest-picker').classList.add('visible');
   const grid = document.getElementById('dest-grid');
-  grid.innerHTML = CATEGORIES.map((c,i) => `
-    <button class="dest-btn ${i===selectedCatIdx?'active':''}" onclick="selectDest(${i}, this)">
-      ${c.name}
-    </button>
-  `).join('');
+  grid.innerHTML = CATEGORIES.map((c,i) =>
+    `<button class="dest-btn ${i===selectedCatIdx?'active':''}" onclick="selectDest(${i}, this)">${c.name}</button>`
+  ).join('');
   renderTabPicker(selectedCatIdx);
 }
 
-window.selectDest = async (i, el) => {
+async function selectDest(i, el) {
   selectedCatIdx = i;
   document.querySelectorAll('.dest-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   await loadTabsForCat(i);
   renderTabPicker(i);
-};
+}
 
 function renderTabPicker(catIdx) {
   const tabs = getTabsFor(catIdx);
@@ -564,11 +483,11 @@ function renderTabPicker(catIdx) {
   ).join('');
 }
 
-window.selectTabBtn = (t, el) => {
+function selectTabBtn(t, el) {
   selectedTab = t;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-};
+}
 
 // ── FORM ──────────────────────────────────────────────
 function fillForm(nome, cognome, titolo, editore) {
@@ -584,14 +503,13 @@ function resetBookUI() {
   document.getElementById('dest-picker').classList.remove('visible');
   document.getElementById('book-card').style.display = 'none';
   document.querySelectorAll('.lettore-btn').forEach(b=>b.classList.remove('active'));
-  currentTag = ''; currentBook = null; selectedCatIdx = null; selectedTab = null;
+  currentTag=''; currentBook=null; selectedCatIdx=null; selectedTab=null;
 }
 
-window.resetAll = () => {
-  resetBookUI();
-  showStatus('', '');
+function resetAll() {
+  resetBookUI(); showStatus('','');
   document.getElementById('manual-isbn').value = '';
-};
+}
 
 function splitAuthor(s) {
   s = (s||'').trim();
@@ -602,10 +520,10 @@ function splitAuthor(s) {
 }
 
 // ── LETTORE ───────────────────────────────────────────
-window.selectLettore = (el,val) => {
+function selectLettore(el, val) {
   document.querySelectorAll('.lettore-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active'); currentTag=val;
-};
+}
 function renderLettore() {
   document.getElementById('lettore-row').innerHTML =
     tags.map(t=>`<button class="lettore-btn" onclick="selectLettore(this,'${t}')">${t}</button>`).join('') +
@@ -617,45 +535,42 @@ function loadTags() {
   const inp = document.getElementById('tags-input');
   if (inp) inp.value = tags.join(', ');
 }
-window.saveTags = () => {
+function saveTags() {
   tags = document.getElementById('tags-input').value.split(',').map(t=>t.trim()).filter(Boolean);
   localStorage.setItem('sl_tags', JSON.stringify(tags));
   renderLettore(); showStatus('Lettori aggiornati!','success');
-};
+}
 
 // ── SAVE ──────────────────────────────────────────────
-window.saveBook = async () => {
+async function saveBook() {
   if (selectedCatIdx === null) { showStatus('Scegli una destinazione', 'error'); return; }
   const cat = CATEGORIES[selectedCatIdx];
   const tabs = getTabsFor(selectedCatIdx);
   const tab = selectedTab || (tabs ? tabs[0] : 'Foglio1');
-
   const nome    = document.getElementById('f-nome').value.trim();
   const cognome = document.getElementById('f-cognome').value.trim();
   const titolo  = document.getElementById('f-titolo').value.trim();
   const editore = document.getElementById('f-editore').value.trim();
   const autore  = [nome,cognome].filter(Boolean).join(' ');
-
   if (!titolo) { showStatus('Il titolo è obbligatorio', 'error'); return; }
   showStatus('Salvataggio…','loading');
-
   try {
     const res = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${cat.sheetId}/values/${encodeURIComponent(tab+'!A:F')}:append?valueInputOption=USER_ENTERED`,
       { method:'POST', headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'}, body:JSON.stringify({values:[[autore,nome,cognome,titolo,editore,currentTag]]}) }
     );
-    if (res.status===401) { window.signOut(); return; }
+    if (res.status===401) { signOut(); return; }
     if (!res.ok) { const e=await res.json(); showStatus('Errore: '+(e.error?.message||res.status),'error'); return; }
     showStatus(`✓ "${titolo}" → ${cat.name}${tab?' › '+tab:''}`, 'success');
     resetAll();
   } catch(e) { showStatus('Errore di rete: '+e.message,'error'); }
-};
+}
 
 // ── STATUS ────────────────────────────────────────────
 function showStatus(msg, type) {
   const bar = document.getElementById('status-bar');
   bar.className = type||'';
-  bar.style.display = (type&&msg)?'block':'none';
+  bar.style.display = (type&&msg) ? 'block' : 'none';
   if (type==='loading') { bar.innerHTML=`<div class="spinner"></div> ${msg}`; bar.style.display='flex'; }
   else bar.textContent = msg;
 }
